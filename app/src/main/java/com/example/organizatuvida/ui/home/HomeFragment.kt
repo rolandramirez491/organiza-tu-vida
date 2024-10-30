@@ -123,7 +123,7 @@ class HomeFragment : Fragment() {
                 if (response.isSuccessful) {
                     val weatherResponse = response.body()
                     val temp = weatherResponse?.main?.temp
-                    textView.append("\nTemperatura: $temp°C")
+                    textView.append("\nTemperatura de la direccion actual: $temp°C")
                 } else {
                     textView.text = "Error al obtener la temperatura"
                 }
