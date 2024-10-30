@@ -45,7 +45,15 @@ dependencies {
     implementation 'androidx.navigation:navigation-fragment-ktx:2.8.3'
     implementation 'androidx.navigation:navigation-ui-ktx:2.8.3'
     implementation 'com.google.android.gms:play-services-location:21.0.1' // Dependencia para obtener ubicación
+
+    // Retrofit para hacer solicitudes HTTP
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+
+    // JUnit para pruebas unitarias
     testImplementation 'junit:junit:4.13.2'
+
+    // Dependencias para pruebas instrumentadas
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
 }

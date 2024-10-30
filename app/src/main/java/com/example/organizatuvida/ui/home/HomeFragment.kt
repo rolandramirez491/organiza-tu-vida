@@ -16,6 +16,13 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.organizatuvida.databinding.FragmentHomeBinding
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.http.GET
+import retrofit2.http.Query
 import java.util.Locale
 
 class HomeFragment : Fragment() {
@@ -24,6 +31,7 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var weatherApi: WeatherApiService
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,13 +50,21 @@ class HomeFragment : Fragment() {
         // Inicializa el cliente de ubicación
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
-        // Llama a la función para obtener la ubicación
-        getLocation(textView)
+        // Inicializa Retrofit
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://api.openweathermap.org/data/2.5/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        weatherApi = retrofit.create(WeatherApiService::class.java)
+
+        // Llama a la función para obtener la ubicación y el clima
+        getLocationAndWeather(textView)
 
         return root
     }
 
-    private fun getLocation(textView: TextView) {
+    private fun getLocationAndWeather(textView: TextView) {
         if (ActivityCompat.checkSelfPermission(
                 requireContext(),
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -79,6 +95,10 @@ class HomeFragment : Fragment() {
                         val address = addresses[0]
                         val addressLine = address.getAddressLine(0)
                         textView.text = "Dirección: $addressLine"
+
+                        // Llama a la API del clima
+                        getWeatherData(latitude, longitude, textView)
+
                     } else {
                         textView.text = "No se pudo obtener la dirección exacta"
                     }
@@ -94,6 +114,27 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun getWeatherData(lat: Double, lon: Double, textView: TextView) {
+        // Llama a la API usando Retrofit para obtener el clima
+        val call = weatherApi.getCurrentWeather(lat, lon, "metric", "dc87f4093412ad3aaf6d863ddc3dacd7") // Reemplaza con tu clave API
+
+        call.enqueue(object : Callback<WeatherResponse> {
+            override fun onResponse(call: Call<WeatherResponse>, response: Response<WeatherResponse>) {
+                if (response.isSuccessful) {
+                    val weatherResponse = response.body()
+                    val temp = weatherResponse?.main?.temp
+                    textView.append("\nTemperatura: $temp°C")
+                } else {
+                    textView.text = "Error al obtener la temperatura"
+                }
+            }
+
+            override fun onFailure(call: Call<WeatherResponse>, t: Throwable) {
+                textView.text = "Error: ${t.message}"
+            }
+        })
+    }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -102,7 +143,7 @@ class HomeFragment : Fragment() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_LOCATION_PERMISSION) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                getLocation(binding.textHome)
+                getLocationAndWeather(binding.textHome)
             } else {
                 binding.textHome.text = "Permiso de ubicación denegado"
             }
@@ -116,5 +157,25 @@ class HomeFragment : Fragment() {
 
     companion object {
         private const val REQUEST_LOCATION_PERMISSION = 1
+    }
+
+    // Definición de WeatherApiService dentro del fragmento
+    interface WeatherApiService {
+        @GET("weather")
+        fun getCurrentWeather(
+            @Query("lat") lat: Double,
+            @Query("lon") lon: Double,
+            @Query("units") units: String,
+            @Query("appid") apiKey: String // Tu clave API aquí
+        ): Call<WeatherResponse>
+    }
+
+    // Definición de WeatherResponse dentro del fragmento
+    data class WeatherResponse(
+        val main: Main
+    ) {
+        data class Main(
+            val temp: Double // Temperatura en grados Celsius
+        )
     }
 }
