@@ -1,7 +1,7 @@
 package com.example.organizatuvida.ui.dashboard
 
-import android.app.AlertDialog
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,198 +9,102 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.fragment.app.Fragment
-import com.example.organizatuvida.databinding.FragmentDashboardBinding
+import com.example.organizatuvida.R
+import android.app.AlertDialog
 
 class DashboardFragment : Fragment() {
 
-    private var _binding: FragmentDashboardBinding? = null
-    private val binding get() = _binding!!
+    private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var taskList: MutableList<String>
+    private lateinit var taskDetails: MutableList<String>
 
-    private val TASKS_PREFS_KEY = "tasks_prefs"
-    private val TASKS_LIST_KEY = "tasks_list"
+    private lateinit var taskTextInput: EditText
+    private lateinit var dateTextInput: EditText
+    private lateinit var timeTextInput: EditText
+    private lateinit var taskDisplay: LinearLayout
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
+        inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentDashboardBinding.inflate(inflater, container, false)
-        val root: View = binding.root
+    ): View? {
+        val view = inflater.inflate(R.layout.fragment_dashboard, container, false)
 
-        // Referencia al botón "Agregar Tarea"
-        val buttonAddTask: Button = binding.buttonAddTask
-        buttonAddTask.setOnClickListener {
-            showAddTaskDialog()
-        }
+        // Inicializar SharedPreferences
+        sharedPreferences = requireActivity().getSharedPreferences("TaskPrefs", Context.MODE_PRIVATE)
 
-        // Referencia al botón "Mostrar Tareas"
-        val buttonShowTasks: Button = binding.buttonShowTasks
-        buttonShowTasks.setOnClickListener {
-            showTaskList()
-        }
+        // Inicializar listas de tareas
+        taskList = mutableListOf()
+        taskDetails = mutableListOf()
+        loadTasks()
 
-        // Referencia al botón "Modificar Tarea"
-        val buttonModifyTask: Button = binding.buttonModifyTask
-        buttonModifyTask.setOnClickListener {
-            showModifyTaskDialog()
-        }
+        // Vincular vistas
+        taskTextInput = view.findViewById(R.id.taskTextInput)
+        dateTextInput = view.findViewById(R.id.dateTextInput)
+        timeTextInput = view.findViewById(R.id.timeTextInput)
+        taskDisplay = view.findViewById(R.id.taskDisplay)
 
-        return root
+        // Configurar botones
+        view.findViewById<Button>(R.id.addTaskButton).setOnClickListener { addTask() }
+        view.findViewById<Button>(R.id.showTaskButton).setOnClickListener { showTasks() }
+        view.findViewById<Button>(R.id.modifyTaskButton).setOnClickListener { modifyTask() }
+
+        return view
     }
 
-    // Función para mostrar el cuadro de diálogo de agregar tarea
-    private fun showAddTaskDialog() {
+    private fun addTask() {
+        val task = taskTextInput.text.toString()
+        val date = dateTextInput.text.toString()
+        val time = timeTextInput.text.toString()
+        if (task.isNotEmpty() && date.isNotEmpty() && time.isNotEmpty()) {
+            taskList.add(task)
+            taskDetails.add("Task: $task\nDue Date: $date\nDue Time: $time")
+            saveTasks()
+            clearInputs()
+        }
+    }
+
+    private fun showTasks() {
         val builder = AlertDialog.Builder(requireContext())
-        builder.setTitle("Agregar Tarea")
+        builder.setTitle("Tasks")
+        builder.setItems(taskDetails.toTypedArray(), null)
+        builder.setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+        builder.show()
+    }
 
-        // Layout para los inputs
-        val layout = LinearLayout(requireContext())
-        layout.orientation = LinearLayout.VERTICAL
+    private fun modifyTask() {
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle("Select Task to Modify")
 
-        // Campo para el nombre de la tarea
-        val inputTaskName = EditText(requireContext())
-        inputTaskName.hint = "Nombre de la tarea"
-        layout.addView(inputTaskName)
-
-        // Campo para la prioridad de la tarea
-        val inputTaskPriority = EditText(requireContext())
-        inputTaskPriority.hint = "Prioridad (1-5)"
-        layout.addView(inputTaskPriority)
-
-        // Campo para la fecha de entrega de la tarea
-        val inputTaskDueDate = EditText(requireContext())
-        inputTaskDueDate.hint = "Fecha de entrega"
-        layout.addView(inputTaskDueDate)
-
-        builder.setView(layout)
-
-        // Botón "Agregar"
-        builder.setPositiveButton("Agregar") { dialog, _ ->
-            val taskName = inputTaskName.text.toString()
-            val taskPriority = inputTaskPriority.text.toString()
-            val taskDueDate = inputTaskDueDate.text.toString()
-
-            // Validar los datos ingresados
-            if (taskName.isNotEmpty() && taskPriority.isNotEmpty() && taskDueDate.isNotEmpty()) {
-                val task = "Tarea: $taskName, Prioridad: $taskPriority, Fecha: $taskDueDate"
-                saveTask(task)
-            }
+        builder.setItems(taskList.toTypedArray()) { dialog, which ->
+            val selectedTask = taskList[which]
+            taskTextInput.setText(selectedTask)
+            val details = taskDetails[which].split("\n")
+            dateTextInput.setText(details[1].removePrefix("Due Date: "))
+            timeTextInput.setText(details[2].removePrefix("Due Time: "))
             dialog.dismiss()
         }
-
-        // Botón "Cancelar"
-        builder.setNegativeButton("Cancelar") { dialog, _ ->
-            dialog.cancel()
-        }
-
         builder.show()
     }
 
-    // Función para guardar la tarea en SharedPreferences
-    private fun saveTask(task: String) {
-        val sharedPreferences = requireActivity().getSharedPreferences(TASKS_PREFS_KEY, Context.MODE_PRIVATE)
-        val tasks = sharedPreferences.getStringSet(TASKS_LIST_KEY, mutableSetOf())?.toMutableSet() ?: mutableSetOf()
-        tasks.add(task)
-
-        sharedPreferences.edit().putStringSet(TASKS_LIST_KEY, tasks).apply()
+    private fun clearInputs() {
+        taskTextInput.text.clear()
+        dateTextInput.text.clear()
+        timeTextInput.text.clear()
     }
 
-    // Función para mostrar la lista de tareas guardadas
-    private fun showTaskList() {
-        val sharedPreferences = requireActivity().getSharedPreferences(TASKS_PREFS_KEY, Context.MODE_PRIVATE)
-        val tasks = sharedPreferences.getStringSet(TASKS_LIST_KEY, mutableSetOf())
-
-        val builder = AlertDialog.Builder(requireContext())
-        builder.setTitle("Lista de Tareas")
-
-        // Si hay tareas guardadas, las mostramos
-        if (tasks != null && tasks.isNotEmpty()) {
-            val taskList = tasks.joinToString(separator = "\n")
-            builder.setMessage(taskList)
-        } else {
-            builder.setMessage("No hay tareas guardadas.")
-        }
-
-        builder.setPositiveButton("Cerrar") { dialog, _ ->
-            dialog.dismiss()
-        }
-
-        builder.show()
+    private fun saveTasks() {
+        val editor = sharedPreferences.edit()
+        editor.putStringSet("tasks", taskList.toSet())
+        editor.apply()
     }
 
-    // Función para modificar una tarea existente
-    private fun showModifyTaskDialog() {
-        val sharedPreferences = requireActivity().getSharedPreferences(TASKS_PREFS_KEY, Context.MODE_PRIVATE)
-        val tasks = sharedPreferences.getStringSet(TASKS_LIST_KEY, mutableSetOf())?.toMutableSet()
-
-        // Si no hay tareas, mostramos un mensaje
-        if (tasks.isNullOrEmpty()) {
-            val builder = AlertDialog.Builder(requireContext())
-            builder.setTitle("Modificar Tarea")
-            builder.setMessage("No hay tareas para modificar.")
-            builder.setPositiveButton("Cerrar") { dialog, _ -> dialog.dismiss() }
-            builder.show()
-            return
+    private fun loadTasks() {
+        val tasks = sharedPreferences.getStringSet("tasks", setOf())
+        tasks?.let {
+            taskList.addAll(it)
+            taskDetails.addAll(it.map { task -> "Task: $task" })
         }
-
-        // Crear un array de las tareas para seleccionar cuál modificar
-        val tasksArray = tasks.toTypedArray()
-        val builder = AlertDialog.Builder(requireContext())
-        builder.setTitle("Selecciona una tarea para modificar")
-
-        // Mostrar las tareas en un cuadro de diálogo
-        builder.setItems(tasksArray) { _, which ->
-            val selectedTask = tasksArray[which]
-
-            // Mostrar un cuadro de diálogo con los detalles de la tarea seleccionada para modificarla
-            val modifyBuilder = AlertDialog.Builder(requireContext())
-            modifyBuilder.setTitle("Modificar Tarea")
-
-            val layout = LinearLayout(requireContext())
-            layout.orientation = LinearLayout.VERTICAL
-
-            val inputTaskName = EditText(requireContext())
-            inputTaskName.setText(selectedTask.substringAfter("Tarea: ").substringBefore(", Prioridad: "))
-            layout.addView(inputTaskName)
-
-            val inputTaskPriority = EditText(requireContext())
-            inputTaskPriority.setText(selectedTask.substringAfter("Prioridad: ").substringBefore(", Fecha: "))
-            layout.addView(inputTaskPriority)
-
-            val inputTaskDueDate = EditText(requireContext())
-            inputTaskDueDate.setText(selectedTask.substringAfter("Fecha: "))
-            layout.addView(inputTaskDueDate)
-
-            modifyBuilder.setView(layout)
-
-            modifyBuilder.setPositiveButton("Modificar") { dialog, _ ->
-                // Eliminar la tarea anterior
-                tasks.remove(selectedTask)
-
-                // Crear la tarea modificada
-                val modifiedTask = "Tarea: ${inputTaskName.text}, Prioridad: ${inputTaskPriority.text}, Fecha: ${inputTaskDueDate.text}"
-                tasks.add(modifiedTask)
-
-                // Guardar los cambios en SharedPreferences
-                sharedPreferences.edit().putStringSet(TASKS_LIST_KEY, tasks).apply()
-
-                dialog.dismiss()
-            }
-
-            modifyBuilder.setNegativeButton("Cancelar") { dialog, _ ->
-                dialog.dismiss()
-            }
-
-            modifyBuilder.show()
-        }
-
-        builder.setNegativeButton("Cancelar") { dialog, _ -> dialog.dismiss() }
-        builder.show()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 }

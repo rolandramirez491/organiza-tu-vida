@@ -1,36 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/taskTextInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Escribe tu tarea" />
+
+    <EditText
+        android:id="@+id/dateTextInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Fecha (DD/MM/YYYY)" />
+
+    <EditText
+        android:id="@+id/timeTextInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Hora (12 horas)" />
 
     <Button
-        android:id="@+id/buttonAddTask"
+        android:id="@+id/addTaskButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Agregar Tarea"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        android:text="Agregar Tarea" />
 
     <Button
-        android:id="@+id/buttonShowTasks"
+        android:id="@+id/showTaskButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Mostrar Tareas"
-        app:layout_constraintTop_toBottomOf="@id/buttonAddTask"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"/>
+        android:text="Mostrar Tarea" />
 
     <Button
-        android:id="@+id/buttonModifyTask"
+        android:id="@+id/modifyTaskButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Modificar Tarea"
-        app:layout_constraintTop_toBottomOf="@id/buttonShowTasks"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="16dp"/>
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:text="Modificar Tarea" />
+
+    <LinearLayout
+        android:id="@+id/taskDisplay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+</LinearLayout>
