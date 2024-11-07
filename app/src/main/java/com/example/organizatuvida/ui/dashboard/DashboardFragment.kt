@@ -13,6 +13,9 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.example.organizatuvida.R
 import android.app.AlertDialog
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import java.util.Calendar
 
 class DashboardFragment : Fragment() {
 
@@ -50,7 +53,44 @@ class DashboardFragment : Fragment() {
         view.findViewById<Button>(R.id.showTaskButton).setOnClickListener { showTasks() }
         view.findViewById<Button>(R.id.modifyTaskButton).setOnClickListener { modifyTask() }
 
+        // Establecer onClickListeners para abrir el DatePicker y TimePicker
+        dateTextInput.setOnClickListener { openDatePicker() }
+        timeTextInput.setOnClickListener { openTimePicker() }
+
         return view
+    }
+
+    private fun openDatePicker() {
+        // Obtiene la fecha actual
+        val calendar = Calendar.getInstance()
+        val year = calendar.get(Calendar.YEAR)
+        val month = calendar.get(Calendar.MONTH)
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+        // Abre el DatePicker
+        val datePickerDialog = DatePickerDialog(requireContext(), { _, selectedYear, selectedMonth, selectedDay ->
+            // Establece la fecha en el EditText
+            dateTextInput.setText("${selectedDay}/${selectedMonth + 1}/$selectedYear")
+        }, year, month, day)
+
+        datePickerDialog.show()
+    }
+
+    private fun openTimePicker() {
+        // Obtiene la hora actual
+        val calendar = Calendar.getInstance()
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        val minute = calendar.get(Calendar.MINUTE)
+
+        // Abre el TimePicker
+        val timePickerDialog = TimePickerDialog(requireContext(), { _, selectedHour, selectedMinute ->
+            // Establece la hora en el EditText
+            val hourFormatted = if (selectedHour > 12) selectedHour - 12 else selectedHour
+            val time = String.format("%02d:%02d %s", hourFormatted, selectedMinute, if (selectedHour >= 12) "PM" else "AM")
+            timeTextInput.setText(time)
+        }, hour, minute, false)
+
+        timePickerDialog.show()
     }
 
     private fun addTask() {
