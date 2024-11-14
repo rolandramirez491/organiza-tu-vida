@@ -19,8 +19,8 @@ class DashboardFragment : Fragment() {
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var taskList: MutableList<String>
     private lateinit var taskDetails: MutableList<String>
-
     private lateinit var taskDisplay: LinearLayout
+    private var selectedPriority: Int = 1
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -47,7 +47,7 @@ class DashboardFragment : Fragment() {
         return view
     }
 
-    // Muestra un dialogo para agregar una tarea
+    // Muestra un diálogo para agregar una tarea
     private fun showAddTaskDialog() {
         val view = layoutInflater.inflate(R.layout.dialog_add_task, null)
 
@@ -55,11 +55,25 @@ class DashboardFragment : Fragment() {
         val dateTextInput: EditText = view.findViewById(R.id.dateTextInput)
         val timeTextInput: EditText = view.findViewById(R.id.timeTextInput)
 
-        // Configurar los campos de fecha y hora para mostrar los DatePicker y TimePicker
+        // Configurar los campos de fecha y hora
         dateTextInput.setOnClickListener { openDatePicker(dateTextInput) }
         timeTextInput.setOnClickListener { openTimePicker(timeTextInput) }
 
-        // Crear el AlertDialog con los campos de tarea, fecha y hora
+        // Configurar botones de prioridad
+        val priorityButton1: Button = view.findViewById(R.id.priorityButton1)
+        val priorityButton2: Button = view.findViewById(R.id.priorityButton2)
+        val priorityButton3: Button = view.findViewById(R.id.priorityButton3)
+        val priorityButton4: Button = view.findViewById(R.id.priorityButton4)
+        val priorityButton5: Button = view.findViewById(R.id.priorityButton5)
+
+        // Set listeners for priority buttons
+        priorityButton1.setOnClickListener { selectedPriority = 1 }
+        priorityButton2.setOnClickListener { selectedPriority = 2 }
+        priorityButton3.setOnClickListener { selectedPriority = 3 }
+        priorityButton4.setOnClickListener { selectedPriority = 4 }
+        priorityButton5.setOnClickListener { selectedPriority = 5 }
+
+        // Crear el AlertDialog
         val dialog = AlertDialog.Builder(requireContext())
             .setTitle("Agregar Tarea")
             .setView(view)
@@ -69,7 +83,7 @@ class DashboardFragment : Fragment() {
                 val time = timeTextInput.text.toString()
                 if (task.isNotEmpty() && date.isNotEmpty() && time.isNotEmpty()) {
                     taskList.add(task)
-                    taskDetails.add("Task: $task\nDue Date: $date\nDue Time: $time")
+                    taskDetails.add("Task: $task\nDue Date: $date\nDue Time: $time\nPriority: $selectedPriority")
                     saveTasks()
                 } else {
                     Toast.makeText(requireContext(), "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
@@ -81,38 +95,32 @@ class DashboardFragment : Fragment() {
         dialog.show()
     }
 
-    // Muestra un dialogo para modificar una tarea
+    // Muestra un diálogo para modificar una tarea
     private fun showModifyTaskDialog() {
         if (taskList.isEmpty()) {
             Toast.makeText(requireContext(), "No hay tareas para modificar", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Mostrar un dialogo con la lista de tareas para seleccionar una
         val builder = AlertDialog.Builder(requireContext())
         builder.setTitle("Selecciona la tarea a modificar")
 
-        // Mostrar lista de tareas
         builder.setItems(taskList.toTypedArray()) { dialog, which ->
             val selectedTask = taskList[which]
             val details = taskDetails[which].split("\n")
-            val task = details.getOrNull(0)?.removePrefix("Task: ") ?: ""
-            val date = details.getOrNull(1)?.removePrefix("Due Date: ") ?: ""
-            val time = details.getOrNull(2)?.removePrefix("Due Time: ") ?: ""
+            val task = details[0].removePrefix("Task: ")
+            val date = details[1].removePrefix("Due Date: ")
+            val time = details[2].removePrefix("Due Time: ")
+            val priority = details[3].removePrefix("Priority: ").toIntOrNull() ?: 1
 
-            if (task.isNotEmpty() && date.isNotEmpty() && time.isNotEmpty()) {
-                // Llamamos al método para mostrar el dialogo de modificación con la tarea seleccionada
-                showEditTaskDialog(task, date, time, which)
-            } else {
-                Toast.makeText(requireContext(), "La tarea está incompleta, no se puede modificar", Toast.LENGTH_SHORT).show()
-            }
+            showEditTaskDialog(task, date, time, priority, which)
             dialog.dismiss()
         }
         builder.show()
     }
 
-    // Muestra un dialogo para editar una tarea
-    private fun showEditTaskDialog(task: String, date: String, time: String, position: Int) {
+    // Muestra un diálogo para editar una tarea
+    private fun showEditTaskDialog(task: String, date: String, time: String, priority: Int, position: Int) {
         val view = layoutInflater.inflate(R.layout.dialog_add_task, null)
 
         val taskTextInput: EditText = view.findViewById(R.id.taskTextInput)
@@ -124,11 +132,25 @@ class DashboardFragment : Fragment() {
         dateTextInput.setText(date)
         timeTextInput.setText(time)
 
-        // Configurar los campos de fecha y hora para mostrar los DatePicker y TimePicker
+        // Configurar los campos de fecha y hora
         dateTextInput.setOnClickListener { openDatePicker(dateTextInput) }
         timeTextInput.setOnClickListener { openTimePicker(timeTextInput) }
 
-        // Crear el AlertDialog con los campos de tarea, fecha y hora
+        // Configurar botones de prioridad
+        selectedPriority = priority
+        val priorityButtons = listOf(
+            view.findViewById<Button>(R.id.priorityButton1),
+            view.findViewById<Button>(R.id.priorityButton2),
+            view.findViewById<Button>(R.id.priorityButton3),
+            view.findViewById<Button>(R.id.priorityButton4),
+            view.findViewById<Button>(R.id.priorityButton5)
+        )
+
+        priorityButtons.forEachIndexed { index, button ->
+            button.setOnClickListener { selectedPriority = index + 1 }
+        }
+
+        // Crear el AlertDialog
         val dialog = AlertDialog.Builder(requireContext())
             .setTitle("Modificar Tarea")
             .setView(view)
@@ -137,10 +159,9 @@ class DashboardFragment : Fragment() {
                 val updatedDate = dateTextInput.text.toString()
                 val updatedTime = timeTextInput.text.toString()
                 if (updatedTask.isNotEmpty() && updatedDate.isNotEmpty() && updatedTime.isNotEmpty()) {
-                    // Actualizar las listas de tareas
                     taskList[position] = updatedTask
-                    taskDetails[position] = "Task: $updatedTask\nDue Date: $updatedDate\nDue Time: $updatedTime"
-                    saveTasks()  // Guardamos los cambios en SharedPreferences
+                    taskDetails[position] = "Task: $updatedTask\nDue Date: $updatedDate\nDue Time: $updatedTime\nPriority: $selectedPriority"
+                    saveTasks()
                 } else {
                     Toast.makeText(requireContext(), "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
                 }
@@ -187,23 +208,21 @@ class DashboardFragment : Fragment() {
     }
 
     private fun saveTasks() {
-        val editor = sharedPreferences.edit()
-        // Guardar las tareas y detalles como una lista de cadenas
-        editor.putStringSet("tasks", taskList.toSet())
-        editor.putStringSet("taskDetails", taskDetails.toSet())  // Guardar también los detalles de las tareas
-        editor.apply()
+        val taskSet = taskList.mapIndexed { index, task ->
+            val details = taskDetails[index].split("\n")
+            "$task::${details[1].removePrefix("Due Date: ")}::${details[2].removePrefix("Due Time: ")}::${details[3].removePrefix("Priority: ")}"
+        }.toSet()
+        sharedPreferences.edit().putStringSet("tasks", taskSet).apply()
     }
 
     private fun loadTasks() {
-        val tasks = sharedPreferences.getStringSet("tasks", setOf())
-        val details = sharedPreferences.getStringSet("taskDetails", setOf())
-
-        tasks?.let {
-            taskList.addAll(it)
-        }
-
-        details?.let {
-            taskDetails.addAll(it)
+        val taskSet = sharedPreferences.getStringSet("tasks", emptySet())
+        taskSet?.forEach { entry ->
+            val parts = entry.split("::")
+            if (parts.size == 4) {
+                taskList.add(parts[0])
+                taskDetails.add("Task: ${parts[0]}\nDue Date: ${parts[1]}\nDue Time: ${parts[2]}\nPriority: ${parts[3]}")
+            }
         }
     }
 }
