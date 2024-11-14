@@ -9,13 +9,13 @@
         android:id="@+id/taskTextInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Escribe tu tarea" />
+        android:hint="Nombre De La Tarea" />
 
     <EditText
         android:id="@+id/dateTextInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Selecciona la fecha"
+        android:hint="Fecha De Entrega"
         android:focusable="false"
         android:clickable="true" />
 
@@ -23,9 +23,16 @@
         android:id="@+id/timeTextInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Selecciona la hora"
+        android:hint="Hora De Entrega"
         android:focusable="false"
         android:clickable="true" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Prioridad De La Tarea"
+        android:layout_gravity="center"
+        android:layout_marginTop="8dp"
+        android:textStyle="bold" />
 
     <!-- Botones de prioridad -->
     <LinearLayout
@@ -33,6 +40,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center">
+
 
         <Button
             android:id="@+id/priorityButton1"

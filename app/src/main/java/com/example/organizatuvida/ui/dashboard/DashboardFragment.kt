@@ -83,7 +83,7 @@ class DashboardFragment : Fragment() {
                 val time = timeTextInput.text.toString()
                 if (task.isNotEmpty() && date.isNotEmpty() && time.isNotEmpty()) {
                     taskList.add(task)
-                    taskDetails.add("Task: $task\nDue Date: $date\nDue Time: $time\nPriority: $selectedPriority")
+                    taskDetails.add("Tarea: $task\nFecha De Entrega: $date\nHora De Entrega: $time\nPrioridad: $selectedPriority")
                     saveTasks()
                 } else {
                     Toast.makeText(requireContext(), "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
@@ -108,10 +108,10 @@ class DashboardFragment : Fragment() {
         builder.setItems(taskList.toTypedArray()) { dialog, which ->
             val selectedTask = taskList[which]
             val details = taskDetails[which].split("\n")
-            val task = details[0].removePrefix("Task: ")
-            val date = details[1].removePrefix("Due Date: ")
-            val time = details[2].removePrefix("Due Time: ")
-            val priority = details[3].removePrefix("Priority: ").toIntOrNull() ?: 1
+            val task = details[0].removePrefix("Tarea: ")
+            val date = details[1].removePrefix("Fecha De Entrega: ")
+            val time = details[2].removePrefix("Hora De Entrega: ")
+            val priority = details[3].removePrefix("Prioridad: ").toIntOrNull() ?: 1
 
             showEditTaskDialog(task, date, time, priority, which)
             dialog.dismiss()
@@ -160,7 +160,7 @@ class DashboardFragment : Fragment() {
                 val updatedTime = timeTextInput.text.toString()
                 if (updatedTask.isNotEmpty() && updatedDate.isNotEmpty() && updatedTime.isNotEmpty()) {
                     taskList[position] = updatedTask
-                    taskDetails[position] = "Task: $updatedTask\nDue Date: $updatedDate\nDue Time: $updatedTime\nPriority: $selectedPriority"
+                    taskDetails[position] = "Tarea: $updatedTask\nFecha De Entrega: $updatedDate\nHora De Entrega: $updatedTime\nPrioridad: $selectedPriority"
                     saveTasks()
                 } else {
                     Toast.makeText(requireContext(), "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
@@ -201,7 +201,7 @@ class DashboardFragment : Fragment() {
 
     private fun showTasks() {
         val builder = AlertDialog.Builder(requireContext())
-        builder.setTitle("Tasks")
+        builder.setTitle("Tareas")
         builder.setItems(taskDetails.toTypedArray(), null)
         builder.setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
         builder.show()
@@ -210,7 +210,7 @@ class DashboardFragment : Fragment() {
     private fun saveTasks() {
         val taskSet = taskList.mapIndexed { index, task ->
             val details = taskDetails[index].split("\n")
-            "$task::${details[1].removePrefix("Due Date: ")}::${details[2].removePrefix("Due Time: ")}::${details[3].removePrefix("Priority: ")}"
+            "$task::${details[1].removePrefix("Fecha De Entrega: ")}::${details[2].removePrefix("Hora De Entrega: ")}::${details[3].removePrefix("Prioridad: ")}"
         }.toSet()
         sharedPreferences.edit().putStringSet("tasks", taskSet).apply()
     }
@@ -221,7 +221,7 @@ class DashboardFragment : Fragment() {
             val parts = entry.split("::")
             if (parts.size == 4) {
                 taskList.add(parts[0])
-                taskDetails.add("Task: ${parts[0]}\nDue Date: ${parts[1]}\nDue Time: ${parts[2]}\nPriority: ${parts[3]}")
+                taskDetails.add("Tarea: ${parts[0]}\nFecha De Entrega: ${parts[1]}\nHora De Entrega: ${parts[2]}\nPrioridad: ${parts[3]}")
             }
         }
     }

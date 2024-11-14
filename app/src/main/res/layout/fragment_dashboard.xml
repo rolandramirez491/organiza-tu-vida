@@ -25,6 +25,12 @@
         android:layout_height="wrap_content"
         android:text="Modificar Tarea" />
 
+    <Button
+        android:id="@+id/deleteTaskButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Eliminar Tarea" />
+
     <LinearLayout
         android:id="@+id/taskDisplay"
         android:layout_width="match_parent"
