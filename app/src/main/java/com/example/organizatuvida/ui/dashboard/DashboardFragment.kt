@@ -43,6 +43,7 @@ class DashboardFragment : Fragment() {
         view.findViewById<Button>(R.id.addTaskButton).setOnClickListener { showAddTaskDialog() }
         view.findViewById<Button>(R.id.showTaskButton).setOnClickListener { showTasks() }
         view.findViewById<Button>(R.id.modifyTaskButton).setOnClickListener { showModifyTaskDialog() }
+        view.findViewById<Button>(R.id.deleteTaskButton).setOnClickListener { showDeleteTaskDialog() }
 
         return view
     }
@@ -60,18 +61,17 @@ class DashboardFragment : Fragment() {
         timeTextInput.setOnClickListener { openTimePicker(timeTextInput) }
 
         // Configurar botones de prioridad
-        val priorityButton1: Button = view.findViewById(R.id.priorityButton1)
-        val priorityButton2: Button = view.findViewById(R.id.priorityButton2)
-        val priorityButton3: Button = view.findViewById(R.id.priorityButton3)
-        val priorityButton4: Button = view.findViewById(R.id.priorityButton4)
-        val priorityButton5: Button = view.findViewById(R.id.priorityButton5)
+        val priorityButtons = listOf(
+            view.findViewById<Button>(R.id.priorityButton1),
+            view.findViewById<Button>(R.id.priorityButton2),
+            view.findViewById<Button>(R.id.priorityButton3),
+            view.findViewById<Button>(R.id.priorityButton4),
+            view.findViewById<Button>(R.id.priorityButton5)
+        )
 
-        // Set listeners for priority buttons
-        priorityButton1.setOnClickListener { selectedPriority = 1 }
-        priorityButton2.setOnClickListener { selectedPriority = 2 }
-        priorityButton3.setOnClickListener { selectedPriority = 3 }
-        priorityButton4.setOnClickListener { selectedPriority = 4 }
-        priorityButton5.setOnClickListener { selectedPriority = 5 }
+        priorityButtons.forEachIndexed { index, button ->
+            button.setOnClickListener { selectedPriority = index + 1 }
+        }
 
         // Crear el AlertDialog
         val dialog = AlertDialog.Builder(requireContext())
@@ -172,6 +172,30 @@ class DashboardFragment : Fragment() {
         dialog.show()
     }
 
+    // Muestra un diálogo para eliminar una tarea
+    private fun showDeleteTaskDialog() {
+        if (taskList.isEmpty()) {
+            Toast.makeText(requireContext(), "No hay tareas para eliminar", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle("Selecciona la tarea a eliminar")
+
+        builder.setItems(taskList.toTypedArray()) { dialog, which ->
+            // Eliminar la tarea seleccionada de las listas
+            taskList.removeAt(which)
+            taskDetails.removeAt(which)
+
+            // Guardar los cambios en SharedPreferences
+            saveTasks()
+
+            Toast.makeText(requireContext(), "Tarea eliminada", Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+        }
+        builder.show()
+    }
+
     private fun openDatePicker(dateTextInput: EditText) {
         val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)
@@ -203,7 +227,7 @@ class DashboardFragment : Fragment() {
         val builder = AlertDialog.Builder(requireContext())
         builder.setTitle("Tareas")
         builder.setItems(taskDetails.toTypedArray(), null)
-        builder.setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+        builder.setPositiveButton("OK", null)
         builder.show()
     }
 
