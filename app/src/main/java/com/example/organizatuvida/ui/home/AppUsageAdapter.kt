@@ -1,10 +1,8 @@
 package com.example.organizatuvida.ui.home
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.example.organizatuvida.R
 import com.example.organizatuvida.databinding.ItemAppUsageBinding
 
 class AppUsageAdapter(private val appUsageList: List<AppUsageInfo>) :
@@ -28,8 +26,11 @@ class AppUsageAdapter(private val appUsageList: List<AppUsageInfo>) :
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(appUsageInfo: AppUsageInfo) {
+            val usageTimeInMinutes = appUsageInfo.usageTimeInSeconds / 60 // Minutos completos
+            val secondsRemainder = appUsageInfo.usageTimeInSeconds % 60   // Segundos restantes
+
             binding.appName.text = appUsageInfo.packageName
-            binding.usageTime.text = "Tiempo de uso: ${appUsageInfo.usageTimeInSeconds} seg."
+            binding.usageTime.text = "Tiempo de uso: $usageTimeInMinutes min ${secondsRemainder} seg."
             binding.lastUsed.text = "Última vez: ${appUsageInfo.lastUsedTime}"
         }
     }

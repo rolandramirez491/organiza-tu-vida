@@ -177,15 +177,16 @@ class HomeFragment : Fragment() {
 
             val currentTime = System.currentTimeMillis()
 
-            // Obtener la fecha de medianoche de hoy
+            // Calcular el inicio del período hace 7 días
             val calendar = Calendar.getInstance()
             calendar.timeInMillis = currentTime
+            calendar.add(Calendar.DAY_OF_YEAR, -7) // Retrocede 7 días
             calendar.set(Calendar.HOUR_OF_DAY, 0)  // Establecer la hora a las 00:00
             calendar.set(Calendar.MINUTE, 0)
             calendar.set(Calendar.SECOND, 0)
             calendar.set(Calendar.MILLISECOND, 0)
 
-            val startTime = calendar.timeInMillis  // Este es el inicio del día actual (medianoche)
+            val startTime = calendar.timeInMillis
 
             val usageStatsList = usageStatsManager.queryUsageStats(
                 UsageStatsManager.INTERVAL_DAILY,
@@ -198,28 +199,25 @@ class HomeFragment : Fragment() {
             if (!usageStatsList.isNullOrEmpty()) {
                 val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
 
-                // Aquí se filtra y mapea la lista de estadísticas de uso de las aplicaciones
+                // Filtrar y ordenar la lista de estadísticas de uso de las aplicaciones
                 val appUsageData = usageStatsList.mapNotNull {
-                    // Solo añadir las aplicaciones que han tenido uso (tiempo en primer plano mayor que 0)
-                    if (it.totalTimeInForeground > 0) {
+                    val usageTimeInSeconds = it.totalTimeInForeground / 1000
+                    if (usageTimeInSeconds > 60) { // Solo incluir apps con más de 60 segundos (1 minuto)
                         AppUsageInfo(
                             it.packageName,
-                            it.totalTimeInForeground / 1000,  // Convertir a segundos
-                            dateFormat.format(Date(it.lastTimeUsed))  // Formatear la última vez que se usó
+                            usageTimeInSeconds,  // Tiempo en segundos
+                            dateFormat.format(Date(it.lastTimeUsed))  // Última vez que se usó
                         )
                     } else {
-                        null  // No añadir si no se usó
+                        null // Excluir apps con 0 o menos de 60 segundos de uso
                     }
-                }
+                }.sortedBy { it.usageTimeInSeconds } // Ordenar por tiempo de uso en segundos
 
                 // Actualizar la UI en el hilo principal
                 withContext(Dispatchers.Main) {
-                    appUsageList.clear()  // Limpiar la lista actual
-                    appUsageList.addAll(appUsageData)  // Añadir los datos procesados
+                    appUsageList.clear()
+                    appUsageList.addAll(appUsageData)  // Añadir los datos filtrados y ordenados
                     adapter.notifyDataSetChanged()  // Notificar al adaptador que los datos han cambiado
-
-                    // Mostrar el cuadro de diálogo con el valor de startTime (opcional)
-                    showStartTimeDialog(startTime)
                 }
             } else {
                 withContext(Dispatchers.Main) {
@@ -228,6 +226,9 @@ class HomeFragment : Fragment() {
             }
         }
     }
+
+
+
 
     // Función para mostrar el AlertDialog con el valor de startTime
     private fun showStartTimeDialog(startTime: Long) {

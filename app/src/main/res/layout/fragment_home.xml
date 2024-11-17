@@ -37,7 +37,6 @@
         android:id="@+id/textHome"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Información adicional..."
         android:textSize="14sp"
         android:textColor="#666666"
         app:layout_constraintTop_toBottomOf="@id/temperatureInfo"
