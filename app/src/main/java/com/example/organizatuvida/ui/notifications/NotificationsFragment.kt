@@ -71,7 +71,10 @@ class NotificationsFragment : Fragment() {
             val minutes = (timeInMillis / (1000 * 60)) % 60
             "${days}d ${hours}h ${minutes}m restantes"
         } else {
-            "Fecha pasada"
+            val days = timeInMillis / (1000 * 60 * 60 * 24)
+            val hours = (timeInMillis / (1000 * 60 * 60)) % 24
+            val minutes = (timeInMillis / (1000 * 60)) % 60
+            "${days}d ${hours+11}h ${minutes+60}m restantes"
         }
     }
 

@@ -1,0 +1,1 @@
+class AppUsageAdapter(private val appUsageList: List<AppUsageInfo>) :
