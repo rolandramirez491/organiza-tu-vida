@@ -5,8 +5,6 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-
-
     <Button
         android:id="@+id/addTaskButton"
         android:layout_width="wrap_content"
@@ -30,6 +28,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Eliminar Tarea" />
+
+    <!-- Texto debajo del botón Eliminar Tarea -->
+    <TextView
+        android:id="@+id/pendingTasksText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tareas pendientes para hoy"
+        android:textSize="16sp"
+        android:paddingTop="16dp"
+        android:layout_marginTop="16dp"/>
 
     <LinearLayout
         android:id="@+id/taskDisplay"

@@ -1,8 +1,5 @@
 package com.example.organizatuvida.ui.home
 
-import android.widget.Toast
-import androidx.appcompat.app.AlertDialog // Importa AlertDialog
-
 import android.Manifest
 import android.app.AppOpsManager
 import android.app.usage.UsageStatsManager
@@ -50,7 +47,7 @@ class HomeFragment : Fragment() {
     private lateinit var weatherApi: WeatherApiService
 
     private lateinit var recyclerView: RecyclerView
-    private var appUsageList: MutableList<AppUsageInfo> = mutableListOf()
+    private var appUsageList: MutableList<Any> = mutableListOf() // Cambiado a MutableList<Any> para datos mixtos
     private lateinit var adapter: AppUsageAdapter
 
     override fun onCreateView(
@@ -63,7 +60,7 @@ class HomeFragment : Fragment() {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        // Inicializa el cliente de ubicación
+        // Inicializa cliente de ubicación
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
         // Inicializa Retrofit
@@ -89,7 +86,7 @@ class HomeFragment : Fragment() {
     private fun setupRecyclerView() {
         recyclerView = binding.recyclerApps
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        adapter = AppUsageAdapter(appUsageList)
+        adapter = AppUsageAdapter(appUsageList) // Ahora soporta datos mixtos
         recyclerView.adapter = adapter
     }
 
@@ -177,11 +174,10 @@ class HomeFragment : Fragment() {
 
             val currentTime = System.currentTimeMillis()
 
-            // Calcular el inicio del período hace 7 días
             val calendar = Calendar.getInstance()
             calendar.timeInMillis = currentTime
-            calendar.add(Calendar.DAY_OF_YEAR, -7) // Retrocede 7 días
-            calendar.set(Calendar.HOUR_OF_DAY, 0)  // Establecer la hora a las 00:00
+            calendar.add(Calendar.DAY_OF_YEAR, -7) // Últimos 7 días
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
             calendar.set(Calendar.MINUTE, 0)
             calendar.set(Calendar.SECOND, 0)
             calendar.set(Calendar.MILLISECOND, 0)
@@ -194,30 +190,36 @@ class HomeFragment : Fragment() {
                 currentTime
             )
 
-            Log.d("UsageStats", "Número de elementos encontrados: ${usageStatsList.size}")
-
             if (!usageStatsList.isNullOrEmpty()) {
-                val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
+                val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
-                // Filtrar y ordenar la lista de estadísticas de uso de las aplicaciones
-                val appUsageData = usageStatsList.mapNotNull {
-                    val usageTimeInSeconds = it.totalTimeInForeground / 1000
-                    if (usageTimeInSeconds > 60) { // Solo incluir apps con más de 60 segundos (1 minuto)
-                        AppUsageInfo(
-                            it.packageName,
-                            usageTimeInSeconds,  // Tiempo en segundos
-                            dateFormat.format(Date(it.lastTimeUsed))  // Última vez que se usó
-                        )
-                    } else {
-                        null // Excluir apps con 0 o menos de 60 segundos de uso
+                val groupedData = usageStatsList
+                    .mapNotNull {
+                        val usageTimeInSeconds = it.totalTimeInForeground / 1000
+                        if (usageTimeInSeconds > 60) { // Filtrar apps con uso mayor a 1 minuto
+                            val lastUsedDate = dateFormat.format(Date(it.lastTimeUsed))
+                            AppUsageInfo(
+                                packageName = it.packageName,
+                                usageTimeInSeconds = usageTimeInSeconds,
+                                lastUsedTime = dateFormat.format(Date(it.lastTimeUsed)),
+                                date = lastUsedDate
+                            )
+                        } else {
+                            null
+                        }
                     }
-                }.sortedBy { it.usageTimeInSeconds } // Ordenar por tiempo de uso en segundos
+                    .groupBy { it.date }
 
-                // Actualizar la UI en el hilo principal
+                val mixedList = mutableListOf<Any>()
+                for ((date, apps) in groupedData) {
+                    mixedList.add(date) // Agrega el encabezado (fecha)
+                    mixedList.addAll(apps.sortedByDescending { it.usageTimeInSeconds }) // Apps ordenadas
+                }
+
                 withContext(Dispatchers.Main) {
                     appUsageList.clear()
-                    appUsageList.addAll(appUsageData)  // Añadir los datos filtrados y ordenados
-                    adapter.notifyDataSetChanged()  // Notificar al adaptador que los datos han cambiado
+                    appUsageList.addAll(mixedList)
+                    adapter.notifyDataSetChanged()
                 }
             } else {
                 withContext(Dispatchers.Main) {
@@ -226,30 +228,6 @@ class HomeFragment : Fragment() {
             }
         }
     }
-
-
-
-
-    // Función para mostrar el AlertDialog con el valor de startTime
-    private fun showStartTimeDialog(startTime: Long) {
-        val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
-        val formattedStartTime = dateFormat.format(Date(startTime))
-
-        val dialogBuilder = AlertDialog.Builder(requireContext())
-        dialogBuilder.setTitle("Start Time")
-        dialogBuilder.setMessage("El valor de startTime es: $formattedStartTime")
-        dialogBuilder.setPositiveButton("Aceptar") { dialog, _ ->
-            dialog.dismiss()
-        }
-
-        val dialog = dialogBuilder.create()
-        dialog.show()
-    }
-
-
-
-
-
 
     private fun hasUsageAccessPermission(context: Context): Boolean {
         val appOpsManager = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
@@ -264,7 +242,7 @@ class HomeFragment : Fragment() {
     private fun requestUsageAccessPermission() {
         val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
         startActivity(intent)
-        binding.textHome.text = "Por favor, habilita el acceso a estadísticas de uso en las configuraciones."
+        binding.textHome.text = "Habilita el acceso a estadísticas de uso en las configuraciones."
     }
 
     override fun onDestroyView() {
@@ -293,5 +271,6 @@ class HomeFragment : Fragment() {
 data class AppUsageInfo(
     val packageName: String,
     val usageTimeInSeconds: Long,
-    val lastUsedTime: String
+    val lastUsedTime: String,
+    val date: String // Fecha en formato "dd/MM/yyyy"
 )

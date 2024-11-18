@@ -1,5 +1,7 @@
 package com.example.organizatuvida.ui.dashboard
 
+import android.graphics.Color
+import java.text.SimpleDateFormat
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
@@ -39,6 +41,9 @@ class DashboardFragment : Fragment() {
         // Vincular vista
         taskDisplay = view.findViewById(R.id.taskDisplay)
 
+        // Mostrar tareas automáticamente al cargar la vista
+        showTodayTasks()
+
         // Configurar botones
         view.findViewById<Button>(R.id.addTaskButton).setOnClickListener { showAddTaskDialog() }
         view.findViewById<Button>(R.id.showTaskButton).setOnClickListener { showTasks() }
@@ -46,6 +51,41 @@ class DashboardFragment : Fragment() {
         view.findViewById<Button>(R.id.deleteTaskButton).setOnClickListener { showDeleteTaskDialog() }
 
         return view
+    }
+
+    // Muestra las tareas del día actual
+    private fun showTodayTasks() {
+        // Obtener la fecha de hoy en formato dd/MM/yyyy
+        val currentDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Calendar.getInstance().time)
+
+        // Limpiar el LinearLayout antes de agregar las tareas
+        taskDisplay.removeAllViews()
+
+        // Iterar sobre las tareas y mostrar las que coinciden con la fecha actual
+        for (i in taskDetails.indices) {
+            val taskDetail = taskDetails[i]
+            val taskDate = taskDetail.split("\n")[1].removePrefix("Fecha De Entrega: ")
+
+            // Comparar las fechas
+            if (taskDate == currentDate) {
+                val taskTextView = TextView(requireContext()).apply {
+                    text = taskDetail
+                    textSize = 16f
+                    setPadding(0, 8, 0, 8)
+                }
+                taskDisplay.addView(taskTextView)
+            }
+        }
+
+        // Si no hay tareas para hoy, mostrar un mensaje
+        if (taskDisplay.childCount == 0) {
+            val noTasksTextView = TextView(requireContext()).apply {
+                text = "No tienes tareas para hoy."
+                textSize = 16f
+                setPadding(0, 8, 0, 8)
+            }
+            taskDisplay.addView(noTasksTextView)
+        }
     }
 
     // Muestra un diálogo para agregar una tarea
@@ -85,6 +125,7 @@ class DashboardFragment : Fragment() {
                     taskList.add(task)
                     taskDetails.add("Tarea: $task\nFecha De Entrega: $date\nHora De Entrega: $time\nPrioridad: $selectedPriority")
                     saveTasks()
+                    showTodayTasks()  // Actualiza la lista de tareas después de agregar una nueva
                 } else {
                     Toast.makeText(requireContext(), "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
                 }
@@ -241,12 +282,18 @@ class DashboardFragment : Fragment() {
 
     private fun loadTasks() {
         val taskSet = sharedPreferences.getStringSet("tasks", emptySet())
+        val currentDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
+
         taskSet?.forEach { entry ->
             val parts = entry.split("::")
             if (parts.size == 4) {
-                taskList.add(parts[0])
-                taskDetails.add("Tarea: ${parts[0]}\nFecha De Entrega: ${parts[1]}\nHora De Entrega: ${parts[2]}\nPrioridad: ${parts[3]}")
+                val taskDate = parts[1]
+                if (taskDate == currentDate) {
+                    taskList.add(parts[0])
+                    taskDetails.add("Tarea: ${parts[0]}\nFecha De Entrega: ${parts[1]}\nHora De Entrega: ${parts[2]}\nPrioridad: ${parts[3]}")
+                }
             }
         }
     }
+
 }

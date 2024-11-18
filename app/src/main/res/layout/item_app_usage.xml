@@ -1,31 +1,31 @@
-<!-- res/layout/item_app_usage.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:padding="16dp"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp">
 
     <TextView
         android:id="@+id/appName"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="App Name"
+        android:text="Nombre de la app"
         android:textSize="16sp"
-        android:fontFamily="sans-serif-medium"/>
+        android:textColor="#000000" />
 
     <TextView
         android:id="@+id/usageTime"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Usage Time"
+        android:text="Tiempo de uso"
         android:textSize="14sp"
-        android:layout_marginTop="8dp"/>
+        android:textColor="#666666" />
 
+    <!-- Agregar este TextView para la última vez que se usó la app -->
     <TextView
         android:id="@+id/lastUsed"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Last Used"
+        android:text="Última vez: "
         android:textSize="14sp"
-        android:layout_marginTop="4dp"/>
+        android:textColor="#666666" />
 </LinearLayout>

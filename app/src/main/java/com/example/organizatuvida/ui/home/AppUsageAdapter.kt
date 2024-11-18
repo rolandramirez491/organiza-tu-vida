@@ -4,24 +4,50 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.organizatuvida.databinding.ItemAppUsageBinding
+import com.example.organizatuvida.databinding.ItemDateHeaderBinding
 
-class AppUsageAdapter(private val appUsageList: List<AppUsageInfo>) :
-    RecyclerView.Adapter<AppUsageAdapter.AppUsageViewHolder>() {
+class AppUsageAdapter(private val itemList: List<Any>) :
+    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppUsageViewHolder {
-        val binding = ItemAppUsageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return AppUsageViewHolder(binding)
+    // Tipos de vista: encabezado de fecha o elemento de aplicación
+    companion object {
+        private const val TYPE_HEADER = 0
+        private const val TYPE_ITEM = 1
     }
 
-    override fun onBindViewHolder(holder: AppUsageViewHolder, position: Int) {
-        val appUsage = appUsageList[position]
-        holder.bind(appUsage)
+    override fun getItemViewType(position: Int): Int {
+        return if (itemList[position] is String) TYPE_HEADER else TYPE_ITEM
     }
 
-    override fun getItemCount(): Int {
-        return appUsageList.size
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return if (viewType == TYPE_HEADER) {
+            val binding = ItemDateHeaderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            DateHeaderViewHolder(binding)
+        } else {
+            val binding = ItemAppUsageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            AppUsageViewHolder(binding)
+        }
     }
 
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        if (holder is DateHeaderViewHolder) {
+            holder.bind(itemList[position] as String)
+        } else if (holder is AppUsageViewHolder) {
+            holder.bind(itemList[position] as AppUsageInfo)
+        }
+    }
+
+    override fun getItemCount(): Int = itemList.size
+
+    // ViewHolder para los encabezados de fecha
+    inner class DateHeaderViewHolder(private val binding: ItemDateHeaderBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+        fun bind(date: String) {
+            binding.dateHeader.text = "Día: $date"
+        }
+    }
+
+    // ViewHolder para los elementos de aplicaciones
     inner class AppUsageViewHolder(private val binding: ItemAppUsageBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
